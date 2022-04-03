@@ -37,6 +37,7 @@ class PageTableViewController: UIViewController{
         //tableView.contentInset = UIEdgeInsets(top: 64, left: 0, bottom: 44, right: 0)
         tableView.estimatedRowHeight = tableViewCellTitleHeight + tableViewCellImageHeight
         tableView.addSubview(refreshControl)
+        tableView.isPagingEnabled = true
         /*  for gesture in cell
         tapGesture = UITapGestureRecognizer(target: self, action: #selector(tableViewController.tapEdit(_:)))
         tableView.addGestureRecognizer(tapGesture!)
@@ -75,7 +76,7 @@ class PageTableViewController: UIViewController{
     private func setupBinding(){
         postViewModel?
             .postPublisher
-            .dropFirst()// don't need update for first load
+            //.dropFirst()// don't need update for first load
             .receive(on: RunLoop.main)
             .sink(receiveValue: {[weak self] _ in
                 self?.tableView.reloadData()
@@ -83,7 +84,7 @@ class PageTableViewController: UIViewController{
             .store(in: &subscribers)
         postViewModel?
             .imagePublisher
-            .dropFirst()// don't need update for first load
+            //.dropFirst()// don't need update for first load
             .receive(on: RunLoop.main)
             .sink(receiveValue: {[weak self] _ in
                 self?.tableView.reloadData()

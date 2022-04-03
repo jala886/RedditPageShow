@@ -70,8 +70,10 @@ class PostViewModel: PostViewModelDelegate{
                     let data = rootModel.data.children.map{$0.data}
                     if forceUpdate {
                         self.postData = data
+                        //self.imageData = self.loadImages(data)
                     }else{
-                        self.postData.append(contentsOf: data)
+                        self.postData.append(contentsOf:data)
+                        //self.imageData.append(selfloadImages(data))
                     }
                     self.downloadImages()
                     self.afterKey = rootModel.data.after
@@ -81,7 +83,6 @@ class PostViewModel: PostViewModelDelegate{
             .store(in: &subscribers)
         
     }
-    
     private func downloadImages(){
         //var imageData = [Data?]()
         var tempData = [Data?]()
@@ -111,8 +112,6 @@ class PostViewModel: PostViewModelDelegate{
     }
     
     func forceUpdate() {
-        postData = []
-        imageData = []
         getPostData(from:DownloadURLs.redditURL,forceUpdate: true)
     }
     
