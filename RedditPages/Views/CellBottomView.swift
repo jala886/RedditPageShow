@@ -9,7 +9,14 @@ import UIKit
 
 class CellBottomView:UIView{
     
-    var favorUpIcon:UIImageView = UIImageView(image:UIImage(systemName:"hand.thumbsup"))
+    var favorUpIcon:UIImageView = {
+        let imageView = UIImageView(image:UIImage(systemName:"hand.thumbsup"))
+        //let tapGesture = UITapGestureRecognizer(target: self, action: #selector(favorUp))
+        //tapGesture.cancelsTouchesInView = false
+        imageView.isUserInteractionEnabled = true
+        
+        return imageView
+    }()
     
     var favorLabel:UILabel = {
         let label = UILabel()
@@ -74,4 +81,8 @@ class CellBottomView:UIView{
         ])
 
     }
+    
+//    @objc private func favorUp(){
+//            print("#file,#func,favorUp")
+//    }
 }

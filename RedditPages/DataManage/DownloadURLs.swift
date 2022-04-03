@@ -7,16 +7,16 @@
 
 import Foundation
 
-enum DownloadURLs:String{
+enum DownloadURLs{
     case redditURL
-    case nextRedditURL
+    case nextRedditURL(String)
     
     var url:String {
         switch self {
         case .redditURL:
             return "http://www.reddit.com/.json"
-        case .nextRedditURL:
-            return DownloadURLs.redditURL.url + "?after=+afterLink"
+        case .nextRedditURL(let key):
+            return DownloadURLs.redditURL.url + "?after=\(key)"
         }
     }
 }

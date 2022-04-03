@@ -37,6 +37,11 @@ class PageTableViewController: UIViewController{
         //tableView.contentInset = UIEdgeInsets(top: 64, left: 0, bottom: 44, right: 0)
         tableView.estimatedRowHeight = tableViewCellTitleHeight + tableViewCellImageHeight
         tableView.addSubview(refreshControl)
+        /*  for gesture in cell
+        tapGesture = UITapGestureRecognizer(target: self, action: #selector(tableViewController.tapEdit(_:)))
+        tableView.addGestureRecognizer(tapGesture!)
+        tapGesture!.delegate = self
+         */
         return tableView
     }()
     
@@ -91,6 +96,19 @@ class PageTableViewController: UIViewController{
     private func refreshData(){
         postViewModel?.forceUpdate()
     }
+    /* for gesture action in cell
+    func tapEdit(recognizer: UITapGestureRecognizer)  {
+        if recognizer.state == UIGestureRecognizerState.Ended {
+            let tapLocation = recognizer.locationInView(self.tableView)
+            if let tapIndexPath = self.tableView.indexPathForRowAtPoint(tapLocation) {
+                if let tappedCell = self.tableView.cellForRowAtIndexPath(tapIndexPath) as? MyTableViewCell {
+                    //do what you want to cell here
+
+                }
+            }
+        }
+    }
+     */
 }
 
 extension PageTableViewController:UITableViewDataSource{
