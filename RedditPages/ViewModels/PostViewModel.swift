@@ -35,7 +35,7 @@ class PostViewModel: PostViewModelDelegate{
     var postPublisher:Published<[PostModel]>.Publisher{$postData}
     //@Published private(set) var imageData:[Int:Data] = [:]
     //var imagePublisher:Published<[Int:Data]>.Publisher{$imageData}
-    @Published private(set) var imageData:[Data?] = []
+    @Published private(set) var imageData = [Data?]()
     var imagePublisher:Published<[Data?]>.Publisher{$imageData}
     
     private var afterKey = ""
@@ -51,6 +51,7 @@ class PostViewModel: PostViewModelDelegate{
     }
     func loadMorePost() {
         getPostData(from:DownloadURLs.nextRedditURL(afterKey), forceUpdate:true)
+        //print(DownloadURLs.nextRedditURL(afterKey).url)
     }
     func getPostData(from url:DownloadURLs, forceUpdate:Bool=false){
         guard !isLoading else{return}
@@ -78,28 +79,34 @@ class PostViewModel: PostViewModelDelegate{
                 }
             }
             .store(in: &subscribers)
+        
     }
     
     private func downloadImages(){
         //var imageData = [Data?]()
-        imageData = []
+        var tempData = [Data?]()
         let group = DispatchGroup()
         for post in postData{
             if let thumbnail = post.thumbnail{
-                group.enter()
-                downloader.downloadImageData(from:thumbnail){[weak self] data in
-                    if let data = data{
-                        self?.imageData.append(data)
+                //print(thumbnail)
+                if thumbnail.starts(with: "https://"){
+                    group.enter()
+                    //print(thumbnail)
+                    downloader.downloadImageData(from: thumbnail){
+                        tempData.append($0)
+                        group.leave()
                     }
-                    group.leave()
+                    
+                }else{
+                    tempData.append(nil)
                 }
-            }else{
-                imageData.append(nil)
             }
         }
+
+        //self.imageData = tempData
         group.notify(queue: .main){ [weak self] in
             print("update image data",self?.imageData.count,self?.postData.count)
-            //self?.imageData = imageData
+            self?.imageData = tempData
         }
     }
     

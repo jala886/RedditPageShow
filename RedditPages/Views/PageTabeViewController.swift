@@ -122,13 +122,15 @@ extension PageTableViewController:UITableViewDataSource{
         cell.layer.cornerRadius = 10
         cell.layer.borderWidth = 1
         cell.backgroundColor = .white
+    
         if cell is PagePostImageCell{
-            if let cell = cell as? PagePostImageCell, let imageData = postViewModel?.imageData[row]{
-                cell.configure(data: data!,imageView: UIImage(data:imageData) ?? UIImage())
+            if let cell = cell as? PagePostImageCell,let imageData = postViewModel?.imageData,row < imageData.count, let rowdata = imageData[row]{
+                cell.configure(data: data!,imageView: UIImage(data:rowdata) ?? UIImage())
             }
         }else{
             cell.configure(data:data!)
         }
+
         return cell
     }
     
@@ -145,12 +147,12 @@ extension PageTableViewController:UITableViewDataSource{
         
         //print(textHeight)
         
-        if data?.thumbnail == "self"{
-            //return UITableView.automaticDimension
-            return textHeight! + tableViewCellBottomHeight
-        }else{
+        if let name = data?.thumbnail, name.starts(with: "https://"){
             //return tableViewCellTitleHeight + tableViewCellImageHeight
             return textHeight! + tableViewCellBottomHeight + tableViewCellImageHeight
+        }else{
+            //return UITableView.automaticDimension
+            return textHeight! + tableViewCellBottomHeight
         }
 
     }
