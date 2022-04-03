@@ -13,30 +13,27 @@ protocol PostViewModelDelegate{
     // send update action message to View
     var postPublisher:Published<[PostModel]>.Publisher {get}
     var postData:[PostModel] {get}
-    //var imagePublisher:Published<[Int:Data]>.Publisher {get}
-    var imagePublisher:Published<[Data?]>.Publisher {get}
-    //var imageData:[Int:Data] {get}
-    var imageData:[Data?] {get}
+    var imagePublisher:Published<[Int:Data]>.Publisher {get}
+    var imageData:[Int:Data] {get}
     
     func loadPost()
     func loadMorePost()
     func forceUpdate()
     
+    func getPostData(by row:Int) -> PostModel?
     func deleteData(row:Int)
 }
 
 class PostViewModel: PostViewModelDelegate{
-    
+
     var totalRows: Int { postData.count }
     // dispose any cancellable
     private var subscribers = Set<AnyCancellable>()
     
     @Published private(set) var postData = [PostModel]()
     var postPublisher:Published<[PostModel]>.Publisher{$postData}
-    //@Published private(set) var imageData:[Int:Data] = [:]
-    //var imagePublisher:Published<[Int:Data]>.Publisher{$imageData}
-    @Published private(set) var imageData = [Data?]()
-    var imagePublisher:Published<[Data?]>.Publisher{$imageData}
+    @Published private(set) var imageData:[Int:Data] = [:]
+    var imagePublisher:Published<[Int:Data]>.Publisher{$imageData}
     
     private var afterKey = ""
     private var isLoading = false
@@ -50,30 +47,29 @@ class PostViewModel: PostViewModelDelegate{
         getPostData(from: DownloadURLs.redditURL)
     }
     func loadMorePost() {
-        getPostData(from:DownloadURLs.nextRedditURL(afterKey), forceUpdate:true)
+        getPostData(from:DownloadURLs.nextRedditURL(afterKey))
         //print(DownloadURLs.nextRedditURL(afterKey).url)
     }
     func getPostData(from url:DownloadURLs, forceUpdate:Bool=false){
         guard !isLoading else{return}
         isLoading = true
         downloader.downloadData(RootModel.self, from: url)
+            .breakpointOnError()
             .sink{ completion in
-            switch completion{
-            case .finished:
-                break
-            case .failure(let error):
-                print(#function,error.localizedDescription)
-                //abort()
-            }
+                switch completion{
+                case .finished:
+                    break
+                case .failure(let error):
+                    print(#function,error.localizedDescription)
+                    //abort()
+                }
             } receiveValue: { [weak self] rootModel in
                 if let self = self{
                     let data = rootModel.data.children.map{$0.data}
                     if forceUpdate {
                         self.postData = data
-                        //self.imageData = self.loadImages(data)
                     }else{
                         self.postData.append(contentsOf:data)
-                        //self.imageData.append(selfloadImages(data))
                     }
                     self.downloadImages()
                     self.afterKey = rootModel.data.after
@@ -81,45 +77,48 @@ class PostViewModel: PostViewModelDelegate{
                 }
             }
             .store(in: &subscribers)
+        let aa = 4
         
     }
     private func downloadImages(){
-        //var imageData = [Data?]()
-        var tempData = [Data?]()
+        var tempData = [Int:Data]()
         let group = DispatchGroup()
-        for post in postData{
+        for (index,post) in postData.enumerated(){
             if let thumbnail = post.thumbnail{
                 //print(thumbnail)
-                if thumbnail.starts(with: "https://"){
-                    group.enter()
-                    //print(thumbnail)
-                    downloader.downloadImageData(from: thumbnail){
-                        tempData.append($0)
-                        group.leave()
+                group.enter()
+                //print(thumbnail)
+                downloader.downloadImageData(from: thumbnail){ data in
+                    if let data = data{
+                        tempData[index] = data
                     }
-                    
-                }else{
-                    tempData.append(nil)
+                    group.leave()
                 }
             }
         }
-
-        //self.imageData = tempData
         group.notify(queue: .main){ [weak self] in
-            print("update image data",self?.imageData.count,self?.postData.count)
+            //print("update image data",self?.imageData.count,self?.postData.count)
             self?.imageData = tempData
         }
     }
     
     func forceUpdate() {
+        postData = []
+        imageData = [:]
         getPostData(from:DownloadURLs.redditURL,forceUpdate: true)
     }
     
     func deleteData(row: Int) {
         postData.remove(at: row)
-        imageData.remove(at: row)
+        downloadImages()
+//        imageData.remove(at: row)
 //        if imageData[row] != nil{
 //            imageData.removeValue(forKey: row)
 //        }
+    }
+
+    func getPostData(by row: Int) -> PostModel? {
+        guard row < postData.count else { return nil }
+        return postData[row]
     }
 }

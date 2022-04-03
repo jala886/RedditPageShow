@@ -20,6 +20,7 @@ class NetworkManager:NetworkManagerProtocol{
         else {return Fail<Model,DownloadError>(error:.badURL).eraseToAnyPublisher()}
         
         return URLSession.shared.dataTaskPublisher(for: url)
+            .breakpointOnError()
                 .mapError {DownloadError.downloadFail($0)}
                 .map{$0.data}
                 .decode(type: Model.self, decoder: JSONDecoder())

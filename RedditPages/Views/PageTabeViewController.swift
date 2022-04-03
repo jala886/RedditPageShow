@@ -28,6 +28,7 @@ class PageTableViewController: UIViewController{
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
         tableView.delegate = self
+        tableView.prefetchDataSource = self
         tableView.register(PagePostCell.self, forCellReuseIdentifier: PagePostCell.identifer)
         tableView.register(PagePostImageCell.self, forCellReuseIdentifier: PagePostImageCell.identifer)
         tableView.backgroundColor = .lightGray
@@ -76,15 +77,16 @@ class PageTableViewController: UIViewController{
     private func setupBinding(){
         postViewModel?
             .postPublisher
-            //.dropFirst()// don't need update for first load
+            .dropFirst()// don't need update for first load
             .receive(on: RunLoop.main)
             .sink(receiveValue: {[weak self] _ in
+                self?.refreshControl.endRefreshing()
                 self?.tableView.reloadData()
             })
             .store(in: &subscribers)
         postViewModel?
             .imagePublisher
-            //.dropFirst()// don't need update for first load
+            .dropFirst()// don't need update for first load
             .receive(on: RunLoop.main)
             .sink(receiveValue: {[weak self] _ in
                 self?.tableView.reloadData()
@@ -115,21 +117,21 @@ class PageTableViewController: UIViewController{
 extension PageTableViewController:UITableViewDataSource{
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let row = indexPath.row
-        let data:PostModel? = postViewModel?.postData[row]
-        let cell = data?.thumbnail == "self" ? tableView.dequeueReusableCell(withIdentifier: PagePostCell.identifer, for: indexPath) as! PagePostCell : tableView.dequeueReusableCell(withIdentifier: PagePostImageCell.identifer, for: indexPath) as! PagePostImageCell
-        //print(data?.thumbnail)
-        //print(type(of:cell))
-        //cell.titleLabel.text = data?.title ?? ""
+        let data = postViewModel?.getPostData(by: row)
+        let cell = data?.thumbnail?.starts(with:"https://") ?? false ? tableView.dequeueReusableCell(withIdentifier: PagePostImageCell.identifer, for: indexPath) as! PagePostImageCell : tableView.dequeueReusableCell(withIdentifier: PagePostCell.identifer, for: indexPath) as! PagePostCell
         cell.layer.cornerRadius = 10
         cell.layer.borderWidth = 1
         cell.backgroundColor = .white
-    
-        if cell is PagePostImageCell{
-            if let cell = cell as? PagePostImageCell,let imageData = postViewModel?.imageData,row < imageData.count, let rowdata = imageData[row]{
-                cell.configure(data: data!,imageView: UIImage(data:rowdata) ?? UIImage())
+        if let data = data{
+            if cell is PagePostImageCell{
+                if let cell = cell as? PagePostImageCell,let imageData = postViewModel?.imageData,row < imageData.count, let rowdata = imageData[row]{
+                    cell.configure(data: data,imageView: UIImage(data:rowdata) ?? UIImage())
+                }else{
+                    cell.configure(data: data)
+                }
+            }else{
+                cell.configure(data:data)
             }
-        }else{
-            cell.configure(data:data!)
         }
 
         return cell
@@ -139,21 +141,21 @@ extension PageTableViewController:UITableViewDataSource{
         postViewModel?.postData.count ?? 0
     }
 
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+    func tableView(_ tableView: UITableView,heightForRowAt indexPath: IndexPath) -> CGFloat {
         let row = indexPath.row
-        let data = postViewModel?.postData[row]
+        let data = postViewModel?.getPostData(by: row)
         let titleText = data?.title
-        let textHeight = titleText?.getSize(with:titleFont).height
+        let textHeight = titleText?.getSize(with:titleFont).height ?? 0
         
         
         //print(textHeight)
         
         if let name = data?.thumbnail, name.starts(with: "https://"){
             //return tableViewCellTitleHeight + tableViewCellImageHeight
-            return textHeight! + tableViewCellBottomHeight + tableViewCellImageHeight
+            return textHeight + tableViewCellBottomHeight + tableViewCellImageHeight
         }else{
             //return UITableView.automaticDimension
-            return textHeight! + tableViewCellBottomHeight
+            return textHeight + tableViewCellBottomHeight
         }
 
     }
