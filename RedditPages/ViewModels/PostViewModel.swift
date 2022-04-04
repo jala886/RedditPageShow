@@ -77,14 +77,13 @@ class PostViewModel: PostViewModelDelegate{
                 }
             }
             .store(in: &subscribers)
-        let aa = 4
         
     }
     private func downloadImages(){
         var tempData = [Int:Data]()
         let group = DispatchGroup()
         for (index,post) in postData.enumerated(){
-            if let thumbnail = post.thumbnail{
+            if let thumbnail = post.thumbnail,thumbnail.starts(with: "https://"){
                 //print(thumbnail)
                 group.enter()
                 //print(thumbnail)

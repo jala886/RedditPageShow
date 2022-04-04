@@ -29,9 +29,10 @@ class NetworkManager:NetworkManagerProtocol{
                 
     }
     func downloadImageData(from url:String, completionHandler:@escaping (Data?)->Void){
+
+        //let url = url.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!
         guard let url = URL(string:url)
         else{return}
-        
         URLSession.shared.dataTask(with:url){data,res,e in
             completionHandler(data)
         }.resume()
