@@ -60,7 +60,10 @@ class PageTableViewController: UIViewController{
     
     private func configureMVVC(){
         let downloader = NetworkManager()
-        postViewModel = PostViewModel(downloader:downloader)
+        let localRepo = LocalRepository()
+        let remoteRepo = RemoteRepository(networkManager: downloader)
+        let repository = Repository(remote: remoteRepo, local: localRepo)
+        postViewModel = PostViewModel(repository: repository)
     }
     
     private func setupUI(){
