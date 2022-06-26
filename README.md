@@ -1,4 +1,4 @@
-This app used MVVC patterns
+This app used MVVC patterns, based on UIKit
 
 Demo Snapshot: iPhone7 and iPhone12
 
